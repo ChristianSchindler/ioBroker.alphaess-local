@@ -1,7 +1,8 @@
 # Creates a new release that can be installed in any ioBroker:
 #   GitHub → Actions → Release → "Run workflow" → enter version + changelog.
-# The workflow sets the version, runs the tests, builds the widget, packs the adapter (.tgz),
-# commits + tags the version and publishes a GitHub Release with the package attached.
+# The workflow sets the version, runs the tests, builds the widget, commits the version together with the
+# built widget (ioBroker installs GitHub URLs straight from the git commit, so widgets/ must be in it),
+# tags it and publishes a GitHub Release (with the .tgz attached for manual installs).
 name: Release
 
 on:
@@ -64,8 +65,6 @@ jobs:
               id: pack
               run: |
                   FILE=$(npm pack --silent)
-                  # Fixed name as well, so ".../releases/latest/download/iobroker.alphaess-local.tgz" always points to the newest version
-                  cp "$FILE" iobroker.alphaess-local.tgz
                   echo "file=$FILE" >> "$GITHUB_OUTPUT"
                   tar -tzf "$FILE"
 
@@ -76,6 +75,8 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
                   git add package.json package-lock.json io-package.json src-widgets/package.json src-widgets/package-lock.json
+                  # widgets/ is ignored for local builds but must be part of the release commit
+                  git add -f widgets
                   git commit -m "Release v$VERSION"
                   git tag "v$VERSION"
                   git push origin HEAD "v$VERSION"
@@ -94,14 +95,10 @@ jobs:
                   Admin → Adapters → **Install from custom URL** (GitHub icon) → tab **Custom** → paste:
 
                   \`\`\`
-                  $REPO_URL/releases/download/v$VERSION/${{ steps.pack.outputs.file }}
+                  $REPO_URL/tree/v$VERSION
                   \`\`\`
 
-                  or always the newest version:
-
-                  \`\`\`
-                  $REPO_URL/releases/latest/download/iobroker.alphaess-local.tgz
-                  \`\`\`
+                  or on the command line: \`iobroker url $REPO_URL/tree/v$VERSION\`
                   EOF
-                  gh release create "v$VERSION" "${{ steps.pack.outputs.file }}" iobroker.alphaess-local.tgz \
+                  gh release create "v$VERSION" "${{ steps.pack.outputs.file }}" \
                       --title "v$VERSION" --notes-file notes.md --latest

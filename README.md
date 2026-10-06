@@ -18,22 +18,22 @@ Other AlphaESS household systems with Modbus (SMILE5, SMILE-G3, SMILE-Hi, STORIO
 
 ## Installation
 
-The adapter is not in the official ioBroker repository – it is installed from the GitHub releases:
+The adapter is not in the official ioBroker repository – it is installed directly from GitHub:
 
 1. ioBroker Admin → **Adapters** → **Install from custom URL** (GitHub/octocat icon in the toolbar; expert mode may need to be switched on)
-2. Tab **Custom** → paste
+2. Tab **Custom** → paste the link of a release, e.g.
    ```
-   https://github.com/ChristianSchindler/ioBroker.alphaess-local/releases/latest/download/iobroker.alphaess-local.tgz
+   https://github.com/ChristianSchindler/ioBroker.alphaess-local/tree/v0.1.1
    ```
-   (always the newest version) or the link of a specific version from the [releases page](https://github.com/ChristianSchindler/ioBroker.alphaess-local/releases)
+   (the current version is on the [releases page](https://github.com/ChristianSchindler/ioBroker.alphaess-local/releases))
 3. **Install** → add an instance → enter the inverter IP in the instance settings
 
-From the command line: `iobroker url https://github.com/ChristianSchindler/ioBroker.alphaess-local/releases/latest/download/iobroker.alphaess-local.tgz`
+From the command line: `iobroker url https://github.com/ChristianSchindler/ioBroker.alphaess-local/tree/v0.1.1`
 
-**Update:** same steps with the same link – the instance and its settings are kept.
+**Update:** same steps with the link of the new version – the instance and its settings are kept.
 
-> Don't use "install from GitHub" with the repository URL itself: the repository does not contain the built widget,
-> only the release package does.
+> ioBroker only accepts repository links from github.com (`…/tree/<tag>`), not download links of release files.
+> Use a version tag (`/tree/vX.Y.Z`): only release commits contain the built VIS-2 widget.
 
 ## Configuration
 
@@ -158,8 +158,8 @@ Releases are built by GitHub Actions – nothing has to be built locally:
 1. Push your changes to `main` (the **Test** workflow runs the unit tests and builds the widget on every push)
 2. GitHub → **Actions** → **Release** → **Run workflow** → enter the new version (e.g. `0.2.0`) and what changed
 3. The workflow sets the version in `package.json` / `io-package.json` (incl. the changelog shown in ioBroker),
-   runs the tests, builds the widget, packs the adapter, commits + tags `vX.Y.Z` and creates the GitHub release
-   with `iobroker.alphaess-local-X.Y.Z.tgz` and `iobroker.alphaess-local.tgz` (fixed name for the "latest" link)
+   runs the tests, builds the widget, commits the version **together with the built widget** (`widgets/`), tags `vX.Y.Z`
+   and creates the GitHub release (with `iobroker.alphaess-local-X.Y.Z.tgz` attached for manual installs)
 
 Locally the same version bump can be done with `node scripts/set-version.mjs 0.2.0 "What changed"`.
 

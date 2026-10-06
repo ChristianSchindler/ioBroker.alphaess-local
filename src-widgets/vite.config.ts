@@ -46,6 +46,9 @@ const config = {
         target: 'chrome89',
         outDir: './build',
         rollupOptions: {
+            // Short chunk names: module federation generates names of 100+ characters, which break
+            // Windows path limits (git checkout, ioBroker on Windows)
+            output: { chunkFileNames: 'assets/[hash].js' },
             onwarn(warning: { code: string }, warn: (warning: { code: string }) => void): void {
                 // Suppress "Module level directives cause errors when bundled" warnings
                 if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
