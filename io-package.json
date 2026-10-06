@@ -1,0 +1,165 @@
+{
+    "common": {
+        "name": "alphaess-local",
+        "version": "0.1.0",
+        "news": {
+            "0.1.0": {
+                "en": "Initial release: local Modbus TCP access, power flow widget for VIS-2",
+                "de": "Erste Version: lokaler Modbus-TCP-Zugriff, Energiefluss-Widget für VIS-2"
+            }
+        },
+        "titleLang": {
+            "en": "AlphaESS local (Modbus)",
+            "de": "AlphaESS lokal (Modbus)"
+        },
+        "desc": {
+            "en": "Reads AlphaESS inverters and batteries locally via Modbus TCP - no cloud, no account. Includes a power flow widget for VIS-2.",
+            "de": "Liest AlphaESS-Wechselrichter und -Speicher lokal über Modbus TCP - ohne Cloud und ohne Konto. Mit Energiefluss-Widget für VIS-2."
+        },
+        "authors": [
+            "Christian Schindler"
+        ],
+        "keywords": [
+            "AlphaESS",
+            "Alpha-ESS",
+            "Modbus",
+            "SMILE",
+            "battery",
+            "photovoltaics",
+            "local"
+        ],
+        "license": "MIT",
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "alphaess-local.svg",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/ChristianSchindler/ioBroker.alphaess-local/main/admin/alphaess-local.svg",
+        "readme": "https://github.com/ChristianSchindler/ioBroker.alphaess-local#readme",
+        "loglevel": "info",
+        "tier": 2,
+        "mode": "daemon",
+        "type": "energy",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "poll",
+        "adminUI": {
+            "config": "json"
+        },
+        "dependencies": [
+            {
+                "js-controller": ">=5.0.19"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.0.13"
+            }
+        ],
+        "visWidgets": {
+            "vis2AlphaEssWidgets": {
+                "i18n": "component",
+                "name": "vis2AlphaEssWidgets",
+                "url": "alphaess-local/customWidgets.js",
+                "bundlerType": "module",
+                "components": [
+                    "AlphaEssPowerFlow"
+                ]
+            }
+        },
+        "restartAdapters": [
+            "vis-2"
+        ]
+    },
+    "native": {
+        "host": "",
+        "fallbackHosts": "",
+        "port": 502,
+        "unitId": 85,
+        "timeout": 3000,
+        "pollInterval": 0.2,
+        "slowPollInterval": 60,
+        "pvStrings": 2,
+        "updateOnlyChanged": true,
+        "enableControl": false
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Connected to inverter",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.host",
+            "type": "state",
+            "common": {
+                "role": "info.ip",
+                "name": "IP address in use",
+                "type": "string",
+                "read": true,
+                "write": false,
+                "def": ""
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.lastUpdate",
+            "type": "state",
+            "common": {
+                "role": "date",
+                "name": "Last successful update",
+                "type": "number",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.pollDuration",
+            "type": "state",
+            "common": {
+                "role": "value.interval",
+                "name": "Duration of last poll",
+                "type": "number",
+                "unit": "ms",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.pollInterval",
+            "type": "state",
+            "common": {
+                "role": "level.interval",
+                "name": "Poll interval (can be changed at runtime)",
+                "type": "number",
+                "unit": "s",
+                "min": 0.2,
+                "max": 3600,
+                "read": true,
+                "write": true
+            },
+            "native": {}
+        }
+    ]
+}

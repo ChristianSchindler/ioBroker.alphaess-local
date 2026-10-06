@@ -1,0 +1,14 @@
+<!doctype html><html><body style="margin:0">
+<iframe id="f" src="preview.html" style="width:1400px;height:900px;border:0"></iframe>
+<script>
+// Clicks every node of the first widget and records which view was requested
+const f = document.getElementById('f');
+f.onload = () => setTimeout(() => {
+  const d = f.contentDocument, out = [];
+  d.querySelectorAll('.frame')[0].querySelectorAll('.aess-btn').forEach(b => {
+    b.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    out.push(b.querySelector('title').textContent);
+  });
+  setTimeout(() => { document.title = 'CLICKED:' + out.join(',') + '|NAV:' + d.getElementById('nav').textContent; }, 300);
+}, 2500);
+</script></body></html>

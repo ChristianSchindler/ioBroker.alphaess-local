@@ -1,0 +1,8 @@
+node_modules/
+src-widgets/node_modules/
+src-widgets/build/
+.dev-server/
+*.log
+# built by "npm run build" in src-widgets / by the release workflow
+widgets/
+*.tgz

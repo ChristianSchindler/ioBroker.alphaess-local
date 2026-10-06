@@ -1,0 +1,45 @@
+{
+    "name": "iobroker.alphaess-local",
+    "version": "0.1.0",
+    "description": "Local AlphaESS inverter/battery data via Modbus TCP - no cloud required",
+    "author": "Christian Schindler",
+    "license": "MIT",
+    "keywords": [
+        "ioBroker",
+        "AlphaESS",
+        "Alpha-ESS",
+        "Modbus",
+        "SMILE",
+        "photovoltaics",
+        "battery"
+    ],
+    "main": "main.js",
+    "files": [
+        "admin/",
+        "lib/",
+        "widgets/",
+        "io-package.json",
+        "main.js",
+        "LICENSE"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "dependencies": {
+        "@iobroker/adapter-core": "^3.2.3",
+        "modbus-serial": "^8.0.21"
+    },
+    "scripts": {
+        "test": "node --test test/decode.test.js",
+        "live": "node test/live.js",
+        "build:widgets": "cd src-widgets && npm run build"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ChristianSchindler/ioBroker.alphaess-local.git"
+    },
+    "homepage": "https://github.com/ChristianSchindler/ioBroker.alphaess-local",
+    "bugs": {
+        "url": "https://github.com/ChristianSchindler/ioBroker.alphaess-local/issues"
+    }
+}

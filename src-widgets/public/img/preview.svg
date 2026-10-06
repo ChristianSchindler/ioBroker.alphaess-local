@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 190">
+  <defs><radialGradient id="b" cx="50%" cy="0%" r="120%"><stop offset="0" stop-color="#1e293b"/><stop offset=".6" stop-color="#0f172a"/><stop offset="1" stop-color="#020617"/></radialGradient></defs>
+  <rect width="200" height="190" rx="16" fill="url(#b)"/>
+  <g stroke="rgba(148,163,184,.25)" stroke-width="2"><line x1="100" y1="50" x2="100" y2="88"/><line x1="48" y1="95" x2="93" y2="95"/><line x1="107" y1="95" x2="152" y2="95"/><line x1="100" y1="102" x2="100" y2="135"/></g>
+  <g stroke-width="3" stroke-linecap="round" stroke-dasharray=".1 7"><line x1="100" y1="50" x2="100" y2="88" stroke="#fbbf24"/><line x1="107" y1="95" x2="152" y2="95" stroke="#a78bfa"/><line x1="48" y1="95" x2="93" y2="95" stroke="#38bdf8"/></g>
+  <circle cx="100" cy="95" r="7" fill="#334155"/>
+  <g fill="#1e293b" stroke-width="2"><circle cx="100" cy="35" r="16" stroke="#fbbf24"/><circle cx="32" cy="95" r="16" stroke="#38bdf8"/><circle cx="168" cy="95" r="16" stroke="#a78bfa"/><circle cx="100" cy="152" r="16" stroke="#34d399"/></g>
+  <circle cx="100" cy="152" r="20" fill="none" stroke="#34d399" stroke-width="3" stroke-dasharray="100 126" transform="rotate(-90 100 152)" stroke-linecap="round"/>
+  <circle cx="100" cy="33" r="5" fill="#fbbf24"/>
+</svg>
