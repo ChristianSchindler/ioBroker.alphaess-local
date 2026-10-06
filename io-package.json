@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "alphaess-local",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "news": {
+            "0.1.1": {
+                "en": "Installable via GitHub URL in ioBroker, includes the VIS-2 widget.",
+                "de": "Installable via GitHub URL in ioBroker, includes the VIS-2 widget."
+            },
             "0.1.0": {
                 "en": "Initial release: local Modbus TCP access, power flow widget for VIS-2",
                 "de": "Erste Version: lokaler Modbus-TCP-Zugriff, Energiefluss-Widget für VIS-2"
