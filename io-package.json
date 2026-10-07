@@ -70,7 +70,7 @@
             "vis2AlphaEssWidgets": {
                 "i18n": "component",
                 "name": "vis2AlphaEssWidgets",
-                "url": "alphaess-local/customWidgets.js",
+                "url": "alphaess-local/customWidgets.js?v=0.1.2",
                 "bundlerType": "module",
                 "components": [
                     "AlphaEssPowerFlow"
