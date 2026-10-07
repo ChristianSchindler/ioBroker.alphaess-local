@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "alphaess-local",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "news": {
+            "0.1.2": {
+                "en": "Fixed: VIS-2 editor crashed when dragging in the power flow widget on VIS-2 older than 2.15 (React error #31)",
+                "de": "Fixed: VIS-2 editor crashed when dragging in the power flow widget on VIS-2 older than 2.15 (React error #31)"
+            },
             "0.1.1": {
                 "en": "Installable via GitHub URL in ioBroker, includes the VIS-2 widget.",
                 "de": "Installable via GitHub URL in ioBroker, includes the VIS-2 widget."

@@ -1,6 +1,6 @@
 {
     "name": "iobroker.alphaess-local",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Local AlphaESS inverter/battery data via Modbus TCP - no cloud required",
     "author": "Christian Schindler",
     "license": "MIT",
