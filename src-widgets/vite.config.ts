@@ -19,7 +19,9 @@ const config = {
             shared: moduleFederationShared(pack),
             dts: false,
         }),
-        react(),
+        // Classic runtime: JSX becomes React.createElement() of the React shared by vis-2. The automatic runtime
+        // bundles react/jsx-runtime of React 19, whose elements crash vis-2 < 2.15 (React 18, error #31).
+        react({ jsxRuntime: 'classic' }),
         commonjs(),
     ],
     server: {
