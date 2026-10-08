@@ -7,12 +7,15 @@ const DATA_POINTS = {
     oid_grid: 'overview.grid_power',
     oid_battery: 'overview.battery_power',
     oid_soc: 'overview.battery_soc',
+    oid_backup: 'inverter.backup.power',
     oid_pv_today: 'energy.today.pv',
     oid_load_today: 'energy.today.consumption',
     oid_feed_today: 'energy.today.grid_feed_in',
     oid_import_today: 'energy.today.grid_consumption',
     oid_autarky_today: 'energy.today.autarky',
     oid_connection: 'info.connection',
+    oid_alarm: 'overview.alarm',
+    oid_alarm_text: 'overview.alarm_text',
 };
 
 const COLORS = {
@@ -21,6 +24,7 @@ const COLORS = {
     house: '#a78bfa',
     gridImport: '#fb7185',
     gridExport: '#38bdf8',
+    backup: '#f59e0b',
 };
 
 /** Minimum power (W) for a flow to be shown as active */
@@ -40,12 +44,17 @@ const CSS = `
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12), inset 0 1px 0 #fff; }
 .aess-transparent { --aess-text: #e2e8f0; --aess-muted: #94a3b8; --aess-node: rgba(15, 23, 42, 0.55); --aess-line: rgba(148, 163, 184, 0.22);
   --aess-chip: rgba(255, 255, 255, 0.06); --aess-border: rgba(255, 255, 255, 0.1); background: transparent; }
-.aess-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+.aess-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+.aess-header > .aess-status { min-width: 0; }
 .aess-title { font-size: 15px; font-weight: 600; letter-spacing: 0.2px; }
 .aess-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--aess-muted); }
 .aess-dot { width: 8px; height: 8px; border-radius: 50%; }
 .aess-dot.on { background: #22c55e; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); animation: aess-pulse 2s infinite; }
 .aess-dot.off { background: #ef4444; }
+.aess-alarm { display: block; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; margin-right: 4px; }
+.aess-alarm.warn { color: #f59e0b; background: rgba(245, 158, 11, 0.14); }
+.aess-alarm.fault { color: #ef4444; background: rgba(239, 68, 68, 0.14); animation: aess-blink 1.6s ease-in-out infinite; }
+@keyframes aess-blink { 50% { opacity: 0.55; } }
 .aess-svg { flex: 1; min-height: 0; width: 100%; }
 .aess-flow { fill: none; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0.1 14; animation: aess-flow linear infinite; }
 .aess-flow.rev { animation-direction: reverse; }
@@ -56,9 +65,9 @@ const CSS = `
 .aess-btn > g { transition: transform 0.18s ease, filter 0.18s ease; transform-box: fill-box; transform-origin: center; }
 .aess-btn:hover > g, .aess-btn:focus-visible > g { transform: scale(1.06); filter: brightness(1.15); }
 .aess-btn:active > g { transform: scale(0.97); }
-.aess-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
-.aess-chip { background: var(--aess-chip); border: 1px solid var(--aess-border); border-radius: 12px; padding: 6px 8px; min-width: 0; }
-.aess-chip-label { font-size: 10px; color: var(--aess-muted); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aess-chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 6px; }
+.aess-chip { background: var(--aess-chip); border: 1px solid var(--aess-border); border-radius: 12px; padding: 6px 7px; min-width: 0; }
+.aess-chip-label { font-size: 9.5px; color: var(--aess-muted); text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .aess-chip-value { font-size: 14px; font-weight: 700; margin-top: 2px; white-space: nowrap; }
 .aess-chip-value small { font-size: 10px; font-weight: 500; color: var(--aess-muted); margin-left: 2px; }
 @keyframes aess-flow { from { stroke-dashoffset: 14.1; } to { stroke-dashoffset: 0; } }
@@ -177,13 +186,18 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                                 changeData(data);
                             },
                         },
-                        { name: 'title', label: 'title', type: 'text', default: 'Energiefluss' },
+                        { name: 'title', label: 'title', type: 'text', default: 'Power flow' },
                         {
                             name: 'theme',
                             label: 'theme',
                             type: 'select',
-                            options: ['dark', 'light', 'transparent'],
-                            default: 'dark',
+                            options: [
+                                { value: 'auto', label: 'theme_auto' },
+                                { value: 'dark', label: 'theme_dark' },
+                                { value: 'light', label: 'theme_light' },
+                                { value: 'transparent', label: 'theme_transparent' },
+                            ],
+                            default: 'auto',
                         },
                         { name: 'showToday', label: 'show_today', type: 'checkbox', default: true },
                         { name: 'showStatus', label: 'show_status', type: 'checkbox', default: true },
@@ -215,6 +229,8 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
         };
     }
 
+    rootRef = React.createRef();
+
     // Do not delete: used by vis to read the widget configuration
     // eslint-disable-next-line class-methods-use-this
     getWidgetInfo() {
@@ -227,8 +243,69 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
     }
 
     val(key) {
-        const oid = this.state.rxData[key];
-        return oid ? this.state.values[`${oid}.val`] : undefined;
+        const oid = this.oid(key);
+        if (!oid) {
+            return undefined;
+        }
+        const v = this.state.values[`${oid}.val`];
+        return v !== undefined ? v : this.state.extraValues?.[oid];
+    }
+
+    /** Configured data point, or the default one of the instance (widgets created before the data point existed) */
+    oid(key) {
+        const d = this.state.rxData;
+        if (d[key] !== undefined) {
+            return d[key];
+        }
+        const inst = (d.oid_pv || '').match(/^alphaess-local\.\d+/);
+        return inst ? `${inst[0]}.${DATA_POINTS[key]}` : undefined;
+    }
+
+    /** vis-2 only subscribes to the data points of the widget attributes - add the ones of older widgets */
+    componentDidMount() {
+        super.componentDidMount?.();
+        const ids = Object.keys(DATA_POINTS)
+            .filter(key => this.state.rxData[key] === undefined)
+            .map(key => this.oid(key))
+            .filter(Boolean);
+        if (ids.length && this.props.context?.socket) {
+            this.extraIds = ids;
+            this.onExtraState = (id, state) =>
+                this.setState(s => ({ extraValues: { ...s.extraValues, [id]: state?.val } }));
+            this.props.context.socket.subscribeState(ids, this.onExtraState);
+        }
+        this.detectBackground();
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        super.componentDidUpdate?.(prevProps, prevState, snapshot);
+        this.detectBackground();
+    }
+
+    /**
+     * Theme "auto": light or dark like the background the widget actually sits on (view or container color).
+     * Without an opaque background color (transparent, image) the light/dark theme of vis-2 decides.
+     */
+    detectBackground() {
+        let bg = null;
+        for (let el = this.rootRef.current?.parentElement; el && !bg; el = el.parentElement) {
+            const m = getComputedStyle(el).backgroundColor.match(/[\d.]+/g);
+            if (m && (m[3] === undefined || Number(m[3]) > 0.5)) {
+                // relative luminance (sRGB weights) of the first opaque background
+                const lum = (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255;
+                bg = lum < 0.5 ? 'dark' : 'light';
+            }
+        }
+        if (bg !== this.state.autoTheme) {
+            this.setState({ autoTheme: bg });
+        }
+    }
+
+    componentWillUnmount() {
+        super.componentWillUnmount?.();
+        if (this.extraIds) {
+            this.props.context.socket.unsubscribeState(this.extraIds, this.onExtraState);
+        }
     }
 
     /** Wraps a node so it switches to the configured VIS view when clicked (not in edit mode) */
@@ -328,7 +405,11 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
         const grid = num(this.val('oid_grid')); // + import / - export
         const bat = num(this.val('oid_battery')); // + discharge / - charge
         const soc = num(this.val('oid_soc'));
+        const backup = num(this.val('oid_backup')); // EPS output, not part of `load`
         const connected = this.val('oid_connection');
+        // 1 = warning, 2 = fault; details (codes) as tooltip
+        const alarm = num(this.val('oid_alarm')) || 0;
+        const alarmText = this.val('oid_alarm_text') || '';
 
         const importing = grid !== null && grid > 0;
         const gridColor = importing ? COLORS.gridImport : COLORS.gridExport;
@@ -340,7 +421,10 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
         const ringLen = 2 * Math.PI * ringR;
         const ringFill = ((soc || 0) / 100) * ringLen;
 
-        const theme = ['dark', 'light', 'transparent'].includes(d.theme) ? d.theme : 'dark';
+        // auto: like the background the widget sits on, else like the light/dark theme of vis-2
+        const theme = ['dark', 'light', 'transparent'].includes(d.theme)
+            ? d.theme
+            : this.state.autoTheme || (this.props.context?.themeType === 'light' ? 'light' : 'dark');
         const showToday = d.showToday !== false;
 
         // Layout (viewBox 400 x 345): PV top, grid left, house right, battery bottom, hub in the middle
@@ -353,17 +437,24 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
         };
 
         return (
-            <div className={`aess-root aess-${theme}`}>
+            <div className={`aess-root aess-${theme}`} ref={this.rootRef}>
                 <style>{CSS}</style>
-                {d.title || d.showStatus !== false ? (
+                {d.title || d.showStatus !== false || alarm ? (
                     <div className="aess-header">
                         <div className="aess-title">{d.title}</div>
-                        {d.showStatus !== false ? (
-                            <div className="aess-status">
-                                <span className={`aess-dot ${connected === false ? 'off' : 'on'}`} />
-                                {connected === false ? t('offline') : t('live')}
-                            </div>
-                        ) : null}
+                        <div className="aess-status">
+                            {alarm ? (
+                                <span className={`aess-alarm ${alarm >= 2 ? 'fault' : 'warn'}`} title={alarmText}>
+                                    ⚠ {alarmText.replace(/ \(0x[0-9a-f]+\)/g, '') || (alarm >= 2 ? t('fault') : t('warning'))}
+                                </span>
+                            ) : null}
+                            {d.showStatus !== false ? (
+                                <>
+                                    <span className={`aess-dot ${connected === false ? 'off' : 'on'}`} />
+                                    {connected === false ? t('offline') : t('live')}
+                                </>
+                            ) : null}
+                        </div>
                     </div>
                 ) : null}
 
@@ -447,7 +538,19 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                     )}
                     {this.renderButton(
                         'house',
-                        this.renderNode(P.house.x, P.house.y, COLORS.house, ICONS.house, t('house'), formatPower(load)),
+                        this.renderNode(
+                            P.house.x,
+                            P.house.y,
+                            COLORS.house,
+                            ICONS.house,
+                            t('house'),
+                            formatPower(load),
+                            // only while the backup output is actually used
+                            backup !== null && Math.abs(backup) >= ACTIVE_THRESHOLD
+                                ? `${t('backup')} ${formatPower(backup)}`
+                                : null,
+                            COLORS.backup,
+                        ),
                     )}
 
                     {this.renderButton(
@@ -486,6 +589,11 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                     <div className="aess-chips">
                         {this.renderChip(t('today_pv'), formatEnergy(num(this.val('oid_pv_today'))), COLORS.pv)}
                         {this.renderChip(t('today_load'), formatEnergy(num(this.val('oid_load_today'))), COLORS.house)}
+                        {this.renderChip(
+                            t('today_import'),
+                            formatEnergy(num(this.val('oid_import_today'))),
+                            COLORS.gridImport,
+                        )}
                         {this.renderChip(
                             t('today_feed'),
                             formatEnergy(num(this.val('oid_feed_today'))),

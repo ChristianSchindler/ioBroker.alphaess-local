@@ -82,16 +82,18 @@
         ]
     },
     "native": {
-        "host": "",
-        "fallbackHosts": "",
-        "port": 502,
-        "unitId": 85,
-        "timeout": 3000,
-        "pollInterval": 0.2,
-        "slowPollInterval": 60,
-        "pvStrings": 2,
-        "updateOnlyChanged": true,
-        "enableControl": false
+        "params": {
+            "host": "",
+            "fallbackHosts": "",
+            "port": 502,
+            "unitId": 85,
+            "timeout": 3000,
+            "pollInterval": 0.2,
+            "slowPollInterval": 60,
+            "pvStrings": 2,
+            "updateOnlyChanged": true,
+            "enableControl": false
+        }
     },
     "objects": [],
     "instanceObjects": [

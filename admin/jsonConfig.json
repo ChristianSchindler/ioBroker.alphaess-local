@@ -6,7 +6,7 @@
             "type": "panel",
             "label": "Connection",
             "items": {
-                "host": {
+                "params.host": {
                     "type": "text",
                     "label": "Inverter IP address",
                     "help": "IP address of the AlphaESS inverter (Modbus TCP must be enabled)",
@@ -14,23 +14,23 @@
                     "sm": 12,
                     "md": 6
                 },
-                "fallbackHosts": {
+                "params.fallbackHosts": {
                     "type": "text",
                     "label": "Fallback IP addresses",
                     "help": "Comma separated - tried when the main IP does not answer",
                     "sm": 12,
                     "md": 6
                 },
-                "port": { "type": "number", "label": "Port", "min": 1, "max": 65535, "sm": 4, "md": 2, "newLine": true },
-                "unitId": { "type": "number", "label": "Modbus slave ID", "help": "AlphaESS default: 85", "min": 1, "max": 247, "sm": 4, "md": 2 },
-                "timeout": { "type": "number", "label": "Timeout (ms)", "min": 500, "max": 30000, "sm": 4, "md": 2 }
+                "params.port": { "type": "number", "label": "Port", "min": 1, "max": 65535, "sm": 4, "md": 2, "newLine": true },
+                "params.unitId": { "type": "number", "label": "Modbus slave ID", "help": "AlphaESS default: 85", "min": 1, "max": 247, "sm": 4, "md": 2 },
+                "params.timeout": { "type": "number", "label": "Timeout (ms)", "min": 500, "max": 30000, "sm": 4, "md": 2 }
             }
         },
         "polling": {
             "type": "panel",
             "label": "Polling",
             "items": {
-                "pollInterval": {
+                "params.pollInterval": {
                     "type": "number",
                     "label": "Poll interval for live values (s)",
                     "help": "Minimum 0.2 s (5 polls per second). Measured on a SMILE-T10: grid meter updates ≥3×/s, inverter/battery ~1 s, PV ~3 s.",
@@ -40,7 +40,7 @@
                     "sm": 12,
                     "md": 6
                 },
-                "slowPollInterval": {
+                "params.slowPollInterval": {
                     "type": "number",
                     "label": "Poll interval for settings (s)",
                     "min": 10,
@@ -48,7 +48,7 @@
                     "sm": 12,
                     "md": 6
                 },
-                "pvStrings": {
+                "params.pvStrings": {
                     "type": "select",
                     "label": "Number of PV strings (MPPT)",
                     "options": [
@@ -63,7 +63,7 @@
                     "md": 6,
                     "newLine": true
                 },
-                "updateOnlyChanged": {
+                "params.updateOnlyChanged": {
                     "type": "checkbox",
                     "label": "Only update states when the value changed",
                     "help": "Reduces load on the ioBroker database",
@@ -81,7 +81,7 @@
                     "text": "When enabled, the states under 'settings' become writable and changes are sent to the inverter (feed-in limit, charge/discharge cut-off SOC, charge/discharge time windows).",
                     "sm": 12
                 },
-                "enableControl": {
+                "params.enableControl": {
                     "type": "checkbox",
                     "label": "Enable control (write settings to the inverter)",
                     "sm": 12,

@@ -70,14 +70,17 @@ alphaess-local.0
 ├── overview          ← clean power flow values for dashboards / widgets
 │   ├── pv_power, load_power, grid_power, battery_power, battery_soc
 │   ├── grid_import, grid_export, battery_charge, battery_discharge   (always ≥ 0)
-│   └── autarky, self_consumption                                   (%, current)
+│   ├── autarky, self_consumption                                   (%, current)
+│   └── alarm (0 = OK, 1 = warning, 2 = fault), alarm_text           (active codes, empty = none)
 ├── grid              smart meter: power (+import / −export), power_l1..l3, voltage_l1..l3,
 │                     current_l1..l3, frequency, reactive_power, apparent_power
 ├── pv                power, string1..n.{voltage, current, power}
 ├── battery           soc, soh, power, voltage, current, capacity, modules, status, relay_status,
-│   │                 max_charge/discharge_current, max_charge/discharge_power, charge/discharge_cutoff_voltage
+│   │                 max_charge/discharge_current, max_charge/discharge_power, charge/discharge_cutoff_voltage,
+│   │                 warning, fault   (bit codes, 0 = none)
 │   └── cells         min/max_voltage, voltage_spread (mV), min/max_temperature
-├── inverter          power, power_l1..l3, voltage_l1..l3, current_l1..l3, frequency, temperature, work_mode
+├── inverter          power, power_l1..l3, voltage_l1..l3, current_l1..l3, frequency, temperature, work_mode,
+│   │                 warning_1/2, fault_1/2   (bit codes, 0 = none)
 │   └── backup        voltage_l1..l3, power  (EPS output)
 ├── energy
 │   ├── today         pv, consumption, grid_feed_in, grid_consumption, battery_charge, battery_discharge,
@@ -93,6 +96,10 @@ alphaess-local.0
 
 Sign convention (same as AlphaESS): grid **+ import / − export**, battery **+ discharge / − charge**.
 Every register state carries its Modbus address in `native.address`.
+
+`overview.alarm_text` names the active warnings/faults, e.g. `Battery warning: Cell low voltage (0x80)`. The bit meanings
+come from the AlphaESS *Modbus register parameter list* (Notes 4, 26, 28, 32, tables of the EMS3.5/EMS3.6 platform).
+The raw code is kept in brackets and in the `battery.warning` / `battery.fault` / `inverter.warning_*` / `inverter.fault_*` states.
 
 ### How the daily values work
 

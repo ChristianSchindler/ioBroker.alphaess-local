@@ -97,3 +97,27 @@ test('daily baseline: older than yesterday counts from now', () => {
     assert.deepStrictEqual(n.totals, { pv: 90 });
     assert.strictEqual(n.since, now.getTime());
 });
+
+test('combines warning and fault registers into an alarm', () => {
+    const ok = { 'battery.warning': 0, 'battery.fault': 0, 'inverter.warning_1': 0, 'inverter.fault_1': 0, 'inverter.work_mode': 1 };
+    assert.strictEqual(calculate(ok, 2)['overview.alarm'], 0);
+    assert.strictEqual(calculate(ok, 2)['overview.alarm_text'], '');
+    const warn = calculate({ ...ok, 'battery.warning': 4 }, 2);
+    assert.strictEqual(warn['overview.alarm'], 1);
+    assert.strictEqual(warn['overview.alarm_text'], 'Battery warning: Discharge low temperature (0x4)');
+    const fault = calculate({ ...ok, 'battery.warning': 4, 'inverter.fault_1': 0x100 }, 2);
+    assert.strictEqual(fault['overview.alarm'], 2);
+    assert.strictEqual(
+        fault['overview.alarm_text'],
+        'Battery warning: Discharge low temperature (0x4), Inverter fault: gfci fault (0x100)',
+    );
+    // several bits, reserved bit
+    assert.strictEqual(
+        calculate({ ...ok, 'battery.warning': 0x80000081 }, 2)['overview.alarm_text'],
+        'Battery warning: Temperature imbalance, Cell low voltage, bit 31 (0x80000081)',
+    );
+    assert.strictEqual(calculate({ ...ok, 'inverter.work_mode': 4 }, 2)['overview.alarm'], 2);
+    // decoded from the raw registers (32 bit)
+    const r = new Map([[0x011c, 0x0001], [0x011d, 0x0002]]);
+    assert.strictEqual(decode(defs['battery.warning'], r), 0x10002);
+});

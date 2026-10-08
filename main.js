@@ -6,6 +6,21 @@ const { BLOCKS, CHANNELS, REGISTER_STATES, CALCULATED_STATES, pvStringStates } =
 
 const MIN_POLL_SECONDS = 0.2; // 5 polls per second
 
+// Settings live in native.params (like ioBroker.modbus). Up to 0.1.x they were directly in native, where Admin
+// shows `native.port` as a port opened by the adapter - which it is not (it connects to port 502 of the inverter).
+const SETTING_KEYS = [
+    'host',
+    'fallbackHosts',
+    'port',
+    'unitId',
+    'timeout',
+    'pollInterval',
+    'slowPollInterval',
+    'pvStrings',
+    'updateOnlyChanged',
+    'enableControl',
+];
+
 class AlphaEssLocal extends utils.Adapter {
     constructor(options = {}) {
         super({ ...options, name: 'alphaess-local' });
@@ -25,10 +40,14 @@ class AlphaEssLocal extends utils.Adapter {
         this.baselineSaved = 0;
         this.errorLogged = false;
         this.writeQueue = Promise.resolve();
+        this.settings = {}; // native.params, set in onReady()
     }
 
     async onReady() {
-        const c = this.config;
+        if (await this.migrateSettings()) {
+            return; // the instance restarts with the new settings
+        }
+        const c = (this.settings = this.config.params || {});
         const hosts = [c.host, ...String(c.fallbackHosts || '').split(/[,;\s]+/)].map(h => (h || '').trim()).filter(Boolean);
         if (!hosts.length) {
             this.log.error('No inverter IP address configured - please open the instance settings');
@@ -60,6 +79,29 @@ class AlphaEssLocal extends utils.Adapter {
         this.poll();
     }
 
+    /**
+     * Moves settings of versions up to 0.1.x from native into native.params (once, keeps the user's values).
+     *
+     * @returns {Promise<boolean>} true if the settings were changed - js-controller then restarts the instance
+     */
+    async migrateSettings() {
+        const obj = await this.getForeignObjectAsync(`system.adapter.${this.namespace}`);
+        const native = obj?.native;
+        const old = SETTING_KEYS.filter(key => native?.[key] !== undefined);
+        if (!old.length) {
+            return false;
+        }
+        // the old values win over the defaults js-controller may have added for params on the update
+        native.params = { ...native.params };
+        old.forEach(key => {
+            native.params[key] = native[key];
+            delete native[key];
+        });
+        this.log.info(`Moved settings to native.params (${old.join(', ')}) - restarting`);
+        await this.setForeignObjectAsync(obj._id, obj);
+        return true;
+    }
+
     // ---------- objects ----------
 
     async createObjects() {
@@ -67,7 +109,7 @@ class AlphaEssLocal extends utils.Adapter {
             await this.extendObjectAsync(id, { type: 'channel', common: { name }, native: {} });
         }
         for (const def of this.defs) {
-            const writable = !!def.write && !!this.config.enableControl;
+            const writable = !!def.write && !!this.settings.enableControl;
             const isText = def.type === 'string' || def.type === 'time';
             const common = {
                 name: def.name,
@@ -91,7 +133,15 @@ class AlphaEssLocal extends utils.Adapter {
         for (const def of CALCULATED_STATES) {
             await this.extendObjectAsync(def.id, {
                 type: 'state',
-                common: { name: def.name, type: 'number', role: def.role, unit: def.unit, read: true, write: false },
+                common: {
+                    name: def.name,
+                    type: def.type || 'number',
+                    role: def.role,
+                    unit: def.unit,
+                    states: def.states,
+                    read: true,
+                    write: false,
+                },
                 native: { calculated: true },
             });
         }
@@ -177,7 +227,7 @@ class AlphaEssLocal extends utils.Adapter {
             values['energy.today.since'] = this.baseline.since ?? null;
         }
 
-        const onlyChanged = this.config.updateOnlyChanged !== false;
+        const onlyChanged = this.settings.updateOnlyChanged !== false;
         for (const [id, val] of Object.entries(values)) {
             const def = this.defsById.get(id);
             if (def && !includeSlow && isSlowState(def)) {
@@ -235,7 +285,7 @@ class AlphaEssLocal extends utils.Adapter {
         if (!def || !def.write) {
             return;
         }
-        if (!this.config.enableControl) {
+        if (!this.settings.enableControl) {
             this.log.warn(`Writing ${localId} ignored: "Enable control" is switched off in the instance settings`);
             return;
         }
