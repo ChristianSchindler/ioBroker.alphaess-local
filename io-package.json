@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "alphaess-local",
-        "version": "0.1.2",
+        "version": "0.2.0",
         "news": {
+            "0.2.0": {
+                "en": " New: grid import today, live backup (EPS) power and inverter/battery warnings with their meaning in the power flow widget; theme \"auto\" follows the page; English default title. updated way for storing Settings, so Admin no longer shows port 502 as an open port (existing settings are moved automatically). VIS-2 now always loads the current widget after an update (no more Ctrl+F5 needed).",
+                "de": " New: grid import today, live backup (EPS) power and inverter/battery warnings with their meaning in the power flow widget; theme \"auto\" follows the page; English default title. updated way for storing Settings, so Admin no longer shows port 502 as an open port (existing settings are moved automatically). VIS-2 now always loads the current widget after an update (no more Ctrl+F5 needed)."
+            },
             "0.1.2": {
                 "en": "Fixed: VIS-2 editor crashed when dragging in the power flow widget on VIS-2 older than 2.15 (React error #31)",
                 "de": "Fixed: VIS-2 editor crashed when dragging in the power flow widget on VIS-2 older than 2.15 (React error #31)"
@@ -70,7 +74,7 @@
             "vis2AlphaEssWidgets": {
                 "i18n": "component",
                 "name": "vis2AlphaEssWidgets",
-                "url": "alphaess-local/customWidgets.js?v=0.1.2",
+                "url": "alphaess-local/customWidgets.js?v=0.2.0",
                 "bundlerType": "module",
                 "components": [
                     "AlphaEssPowerFlow"
