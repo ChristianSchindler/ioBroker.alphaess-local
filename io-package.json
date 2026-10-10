@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "alphaess-local",
-        "version": "0.3.0",
+        "version": "0.3.1",
         "news": {
+            "0.3.1": {
+                "en": "fix: commit not pushed",
+                "de": "fix: commit not pushed"
+            },
             "0.3.0": {
                 "en": "New: optional wallbox node in the VIS-2 power flow widget – works with any wallbox (charging power from any adapter, W or kW). It's subtracted from the house consumption;",
                 "de": "New: optional wallbox node in the VIS-2 power flow widget – works with any wallbox (charging power from any adapter, W or kW). It's subtracted from the house consumption;"
@@ -78,7 +82,7 @@
             "vis2AlphaEssWidgets": {
                 "i18n": "component",
                 "name": "vis2AlphaEssWidgets",
-                "url": "alphaess-local/customWidgets.js?v=0.3.0",
+                "url": "alphaess-local/customWidgets.js?v=0.3.1",
                 "bundlerType": "module",
                 "components": [
                     "AlphaEssPowerFlow"
