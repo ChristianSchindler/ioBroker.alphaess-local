@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "alphaess-local",
-        "version": "0.3.1",
+        "version": "0.3.2",
         "news": {
+            "0.3.2": {
+                "en": "New: nodes of the power flow widget can open their view as a popup (size adjustable)",
+                "de": "New: nodes of the power flow widget can open their view as a popup (size adjustable)"
+            },
             "0.3.1": {
                 "en": "fix: commit not pushed",
                 "de": "fix: commit not pushed"
@@ -82,7 +86,7 @@
             "vis2AlphaEssWidgets": {
                 "i18n": "component",
                 "name": "vis2AlphaEssWidgets",
-                "url": "alphaess-local/customWidgets.js?v=0.3.1",
+                "url": "alphaess-local/customWidgets.js?v=0.3.2",
                 "bundlerType": "module",
                 "components": [
                     "AlphaEssPowerFlow"
