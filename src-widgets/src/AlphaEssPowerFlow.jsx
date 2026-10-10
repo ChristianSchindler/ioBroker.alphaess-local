@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 /** Data points of the alphaess-local adapter used by this widget (relative to the instance) */
 const DATA_POINTS = {
@@ -33,6 +34,9 @@ const ACTIVE_THRESHOLD = 15;
 
 /** Wallbox data points: free choice (any wallbox adapter), so no defaults from this adapter */
 const WALLBOX_POINTS = ['oid_wallbox', 'oid_wallbox_status', 'oid_wallbox_soc', 'oid_wallbox_today'];
+
+/** Nodes that can open a view (attribute `view_<key>`, `popup_<key>` = in a popup instead of switching) */
+const NAV_NODES = ['pv', 'grid', 'house', 'battery', 'wallbox'];
 
 const CSS = `
 .aess-root { width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;
@@ -74,6 +78,18 @@ const CSS = `
 .aess-chip-label { font-size: 9.5px; color: var(--aess-muted); text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .aess-chip-value { font-size: 14px; font-weight: 700; margin-top: 2px; white-space: nowrap; }
 .aess-chip-value small { font-size: 10px; font-weight: 500; color: var(--aess-muted); margin-left: 2px; }
+.aess-backdrop { position: fixed; inset: 0; z-index: 10000; background: rgba(2, 6, 23, 0.55); display: flex;
+  align-items: center; justify-content: center; animation: aess-fade 0.15s ease; }
+.aess-dialog { display: flex; flex-direction: column; max-width: 95vw; max-height: 95vh; border-radius: 18px; overflow: hidden;
+  font-family: 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif; color: var(--aess-text); }
+.aess-dialog-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 8px 16px;
+  font-size: 15px; font-weight: 600; border-bottom: 1px solid var(--aess-border); }
+.aess-close { border: 0; background: var(--aess-chip); color: var(--aess-text); width: 30px; height: 30px; border-radius: 50%;
+  font-size: 18px; line-height: 30px; cursor: pointer; padding: 0; }
+.aess-close:hover { filter: brightness(1.4); }
+.aess-dialog-body { position: relative; flex: 1; min-height: 0; }
+.aess-dialog-body > div { position: absolute; inset: 0; overflow: auto; }
+@keyframes aess-fade { from { opacity: 0; } }
 @keyframes aess-flow { from { stroke-dashoffset: 14.1; } to { stroke-dashoffset: 0; } }
 @keyframes aess-pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); } 70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
 `;
@@ -227,11 +243,29 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                     name: 'navigation',
                     label: 'navigation',
                     fields: [
-                        { name: 'view_pv', label: 'view_pv', type: 'views' },
-                        { name: 'view_grid', label: 'view_grid', type: 'views' },
-                        { name: 'view_house', label: 'view_house', type: 'views' },
-                        { name: 'view_battery', label: 'view_battery', type: 'views' },
-                        { name: 'view_wallbox', label: 'view_wallbox', type: 'views' },
+                        ...NAV_NODES.flatMap(key => [
+                            { name: `view_${key}`, label: `view_${key}`, type: 'views' },
+                            {
+                                name: `popup_${key}`,
+                                label: 'as_popup',
+                                type: 'checkbox',
+                                hidden: data => !data[`view_${key}`],
+                            },
+                        ]),
+                        {
+                            name: 'popupWidth',
+                            label: 'popup_width',
+                            type: 'number',
+                            default: 800,
+                            hidden: data => !NAV_NODES.some(key => data[`view_${key}`] && data[`popup_${key}`]),
+                        },
+                        {
+                            name: 'popupHeight',
+                            label: 'popup_height',
+                            type: 'number',
+                            default: 500,
+                            hidden: data => !NAV_NODES.some(key => data[`view_${key}`] && data[`popup_${key}`]),
+                        },
                     ],
                 },
                 {
@@ -281,6 +315,9 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
     }
 
     rootRef = React.createRef();
+
+    // stable callback: focus only when the popup opens (Escape closes it), not on every value update
+    focusPopup = el => el?.focus();
 
     // Do not delete: used by vis to read the widget configuration
     // eslint-disable-next-line class-methods-use-this
@@ -365,7 +402,11 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
         if (!view || this.props.editMode) {
             return children;
         }
-        const go = () => this.props.context.changeView(view);
+        // the own view inside the popup would contain this widget again → switch instead
+        const go = () =>
+            this.state.rxData[`popup_${key}`] && view !== this.props.view
+                ? this.setState({ popupView: view })
+                : this.props.context.changeView(view);
         return (
             <g
                 className="aess-btn"
@@ -377,6 +418,46 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                 <title>{view}</title>
                 <g>{children}</g>
             </g>
+        );
+    }
+
+    /** View shown in a popup over the page (portal to body: not clipped by the widget or scaled views) */
+    renderPopup(theme) {
+        const view = this.state.popupView;
+        if (!view || this.props.editMode || typeof this.getWidgetView !== 'function') {
+            return null;
+        }
+        const d = this.state.rxData;
+        const close = () => this.setState({ popupView: null });
+        return createPortal(
+            <div
+                className="aess-backdrop"
+                onClick={e => e.target === e.currentTarget && close()}
+                onKeyDown={e => e.key === 'Escape' && close()}
+                ref={this.focusPopup}
+                tabIndex={-1}
+            >
+                <div
+                    className={`aess-root aess-dialog aess-${theme === 'transparent' ? 'dark' : theme}`}
+                    style={{ width: Number(d.popupWidth) || 800, height: Number(d.popupHeight) || 500, padding: 0 }}
+                >
+                    <div className="aess-dialog-head">
+                        <span>{view}</span>
+                        <button
+                            type="button"
+                            className="aess-close"
+                            onClick={close}
+                            title={AlphaEssPowerFlow.t('close')}
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <div className="aess-dialog-body">
+                        <div>{this.getWidgetView(view)}</div>
+                    </div>
+                </div>
+            </div>,
+            document.body,
         );
     }
 
@@ -674,6 +755,7 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                         </g>,
                     )}
                 </svg>
+                {this.renderPopup(theme)}
 
                 {showToday ? (
                     <div

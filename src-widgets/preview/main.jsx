@@ -16,6 +16,10 @@ window.visRxWidget = class extends React.Component {
     static getDerivedStateFromProps(props) {
         return { rxData: props.data, values: props.values };
     }
+    // stand-in for the view vis-2 renders inside a widget
+    getWidgetView(view) {
+        return <div style={{ padding: 20, font: '15px system-ui' }}>Inhalt der View „{view}“ (z. B. Charts)</div>;
+    }
     renderWidgetBody() {}
     render() {
         return this.renderWidgetBody(this.props);
@@ -36,7 +40,7 @@ const wallbox = {
     wallbox_unit: 'kW',
     oid_wallbox_today: 'alphaess-local.0.wallbox.today',
 };
-const views = { view_pv: 'Solar', view_grid: 'Netz', view_house: 'Haus', view_battery: 'Batterie', view_wallbox: 'Wallbox' };
+const views = { view_pv: 'Solar', view_grid: 'Netz', view_house: 'Haus', view_battery: 'Batterie', view_wallbox: 'Wallbox', popup_battery: true };
 
 function App() {
     const [values, setValues] = React.useState({});

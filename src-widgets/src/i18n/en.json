@@ -61,5 +61,9 @@
   "wallbox_connected": "Connected",
   "wallbox_disconnected": "Not connected",
   "today_wallbox": "Wallbox",
-  "view_wallbox": "Wallbox opens view"
+  "view_wallbox": "Wallbox opens view",
+  "as_popup": "↳ open as popup",
+  "popup_width": "Popup width (px)",
+  "popup_height": "Popup height (px)",
+  "close": "Close"
 }

@@ -150,7 +150,9 @@ Both adapters can run at the same time if you need the wallbox control of the cl
 Widget set **AlphaESS local** → **Power flow**. Select the adapter instance and all data points are filled in automatically.
 
 **Navigation:** in the widget attributes, group *Navigation (click → view)*, choose a VIS view for each of the four nodes
-(Solar, Grid, House, Battery). Clicking the node in the runtime opens that view; nodes without a view are not clickable.
+(Solar, Grid, House, Battery, Wallbox). Clicking the node in the runtime opens that view; nodes without a view are not clickable.
+Tick **open as popup** below a view to show it in a popup window over the current page instead (e.g. a chart view
+for the battery); *Popup width/height* set its size. The popup closes with ×, Escape or a click next to it.
 
 - Animated flow lines – speed follows the power, direction follows the energy flow
 - Battery with state-of-charge ring (green / amber below 35 % / red below 15 %)
