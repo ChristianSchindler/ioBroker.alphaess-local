@@ -48,5 +48,18 @@
   "view_pv": "Solar opens view",
   "view_grid": "Grid opens view",
   "view_house": "House opens view",
-  "view_battery": "Battery opens view"
+  "view_battery": "Battery opens view",
+  "wallbox_group": "Wallbox (optional, any adapter)",
+  "wallbox_label": "Wallbox name",
+  "oid_wallbox": "Wallbox charging power (empty = no wallbox)",
+  "wallbox_unit": "Unit of the charging power",
+  "wallbox_in_load": "Wallbox is part of house consumption",
+  "wallbox_in_load_tooltip": "The inverter measures the whole house including the wallbox. When checked, the wallbox power is subtracted from the house value.",
+  "oid_wallbox_status": "Wallbox status (optional)",
+  "oid_wallbox_soc": "Car SOC (optional)",
+  "oid_wallbox_today": "Wallbox energy today, kWh (optional)",
+  "wallbox_connected": "Connected",
+  "wallbox_disconnected": "Not connected",
+  "today_wallbox": "Wallbox",
+  "view_wallbox": "Wallbox opens view"
 }

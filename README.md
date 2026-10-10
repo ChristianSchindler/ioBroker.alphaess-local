@@ -158,6 +158,19 @@ Widget set **AlphaESS local** → **Power flow**. Select the adapter instance an
 - Today chips: solar, consumption, feed-in, self-sufficiency
 - Themes: dark, light, transparent; live/offline indicator
 
+**Wallbox (optional, any manufacturer):** in the attribute group *Wallbox* select the charging power data point of your
+wallbox – from any adapter (go-e, Easee, KEBA, openWB, …), a script or an alias. The wallbox node only appears
+once this data point is set; without it the widget looks as before.
+
+| Attribute | Meaning |
+|---|---|
+| Charging power | required for the node; unit W or kW selectable |
+| Wallbox is part of house consumption | default on: the inverter measures the whole house incl. wallbox, so the wallbox power is subtracted from *House* |
+| Status | optional; `true`/`false` → connected / not connected, text is shown as is |
+| Car SOC | optional, shown next to the status |
+| Energy today (kWh) | optional, adds a *Wallbox* chip to the today row |
+| Wallbox opens view | navigation like the other nodes |
+
 ## Releasing a new version
 
 Releases are built by GitHub Actions – nothing has to be built locally:

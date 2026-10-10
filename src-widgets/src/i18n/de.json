@@ -48,5 +48,18 @@
   "view_pv": "Solar öffnet View",
   "view_grid": "Netz öffnet View",
   "view_house": "Haus öffnet View",
-  "view_battery": "Batterie öffnet View"
+  "view_battery": "Batterie öffnet View",
+  "wallbox_group": "Wallbox (optional, beliebiger Adapter)",
+  "wallbox_label": "Name der Wallbox",
+  "oid_wallbox": "Wallbox-Ladeleistung (leer = keine Wallbox)",
+  "wallbox_unit": "Einheit der Ladeleistung",
+  "wallbox_in_load": "Wallbox ist im Hausverbrauch enthalten",
+  "wallbox_in_load_tooltip": "Der Wechselrichter misst das ganze Haus inklusive Wallbox. Wenn aktiviert, wird die Wallbox-Leistung vom Hauswert abgezogen.",
+  "oid_wallbox_status": "Wallbox-Status (optional)",
+  "oid_wallbox_soc": "Auto-SOC (optional)",
+  "oid_wallbox_today": "Wallbox-Energie heute, kWh (optional)",
+  "wallbox_connected": "Verbunden",
+  "wallbox_disconnected": "Nicht verbunden",
+  "today_wallbox": "Wallbox",
+  "view_wallbox": "Wallbox öffnet View"
 }

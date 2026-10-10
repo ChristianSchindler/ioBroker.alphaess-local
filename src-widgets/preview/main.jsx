@@ -28,7 +28,15 @@ const info = Widget.getWidgetInfo();
 const defaults = {};
 info.visAttrs.forEach(g => g.fields.forEach(f => (defaults[f.name] = f.default)));
 
-const views = { view_pv: 'Solar', view_grid: 'Netz', view_house: 'Haus', view_battery: 'Batterie' };
+// any wallbox: the preview server delivers it under alphaess-local.0.wallbox.*
+const wallbox = {
+    oid_wallbox: 'alphaess-local.0.wallbox.power',
+    oid_wallbox_status: 'alphaess-local.0.wallbox.plugged',
+    oid_wallbox_soc: 'alphaess-local.0.wallbox.soc',
+    wallbox_unit: 'kW',
+    oid_wallbox_today: 'alphaess-local.0.wallbox.today',
+};
+const views = { view_pv: 'Solar', view_grid: 'Netz', view_house: 'Haus', view_battery: 'Batterie', view_wallbox: 'Wallbox' };
 
 function App() {
     const [values, setValues] = React.useState({});
@@ -52,8 +60,7 @@ function App() {
         <>
             <div id="nav" style={{ width: '100%', font: '600 16px system-ui' }}>Navigation: {view || '–'}</div>
             <div className="frame"><Widget data={{ ...defaults, ...views }} values={values} context={context} /></div>
-            <div className="frame"><Widget data={{ ...defaults, theme: 'light' }} values={values} /></div>
-            <div className="bg-photo"><div className="frame small"><Widget data={{ ...defaults, theme: 'transparent', title: '', showToday: false }} values={values} /></div></div>
+            <div className="frame"><Widget data={{ ...defaults, ...views, ...wallbox }} values={values} context={context} /></div>
         </>
     );
 }

@@ -25,10 +25,14 @@ const COLORS = {
     gridImport: '#fb7185',
     gridExport: '#38bdf8',
     backup: '#f59e0b',
+    wallbox: '#2dd4bf',
 };
 
 /** Minimum power (W) for a flow to be shown as active */
 const ACTIVE_THRESHOLD = 15;
+
+/** Wallbox data points: free choice (any wallbox adapter), so no defaults from this adapter */
+const WALLBOX_POINTS = ['oid_wallbox', 'oid_wallbox_status', 'oid_wallbox_soc', 'oid_wallbox_today'];
 
 const CSS = `
 .aess-root { width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;
@@ -109,6 +113,13 @@ const ICONS = {
             <path d="M-3 13 V5 H3 V13" />
         </g>
     ),
+    wallbox: color => (
+        <g fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+            <rect x="-11" y="-14" width="15" height="28" rx="3" />
+            <path d="M-2 -9 L-6 0 H-2 L-4 8" />
+            <path d="M4 -3 H8 Q11 -3 11 0 V9 Q11 13 7 13" />
+        </g>
+    ),
     battery: (soc, color) => (
         <g>
             <rect x="-8" y="-12" width="16" height="26" rx="3" fill="none" stroke={color} strokeWidth="2" />
@@ -147,6 +158,15 @@ function formatEnergy(kwh) {
         return ['–', ''];
     }
     return [kwh >= 100 ? kwh.toFixed(0) : kwh.toFixed(1), 'kWh'];
+}
+
+/** Line from a (node radius ra) to b (node radius rb), starting/ending at the node borders */
+function link(a, ra, b, rb) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len = Math.hypot(dx, dy);
+    const at = (p, r) => `${(p.x + (dx * r) / len).toFixed(1)} ${(p.y + (dy * r) / len).toFixed(1)}`;
+    return `M${at(a, ra)} L${at(b, -rb)}`;
 }
 
 /** Animation duration: faster dots for higher power */
@@ -211,6 +231,37 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                         { name: 'view_grid', label: 'view_grid', type: 'views' },
                         { name: 'view_house', label: 'view_house', type: 'views' },
                         { name: 'view_battery', label: 'view_battery', type: 'views' },
+                        { name: 'view_wallbox', label: 'view_wallbox', type: 'views' },
+                    ],
+                },
+                {
+                    // any wallbox (other adapter, script, alias) - not filled in by the instance;
+                    // the wallbox node is only shown when its power data point is set
+                    name: 'wallbox',
+                    label: 'wallbox_group',
+                    fields: [
+                        { name: 'wallbox_label', label: 'wallbox_label', type: 'text', default: 'Wallbox' },
+                        { name: 'oid_wallbox', label: 'oid_wallbox', type: 'id' },
+                        {
+                            name: 'wallbox_unit',
+                            label: 'wallbox_unit',
+                            type: 'select',
+                            options: [
+                                { value: 'W', label: 'W' },
+                                { value: 'kW', label: 'kW' },
+                            ],
+                            default: 'W',
+                        },
+                        {
+                            name: 'wallboxInLoad',
+                            label: 'wallbox_in_load',
+                            tooltip: 'wallbox_in_load_tooltip',
+                            type: 'checkbox',
+                            default: true,
+                        },
+                        { name: 'oid_wallbox_status', label: 'oid_wallbox_status', type: 'id' },
+                        { name: 'oid_wallbox_soc', label: 'oid_wallbox_soc', type: 'id' },
+                        { name: 'oid_wallbox_today', label: 'oid_wallbox_today', type: 'id' },
                     ],
                 },
                 {
@@ -254,8 +305,8 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
     /** Configured data point, or the default one of the instance (widgets created before the data point existed) */
     oid(key) {
         const d = this.state.rxData;
-        if (d[key] !== undefined) {
-            return d[key];
+        if (d[key] !== undefined || WALLBOX_POINTS.includes(key)) {
+            return d[key] && d[key] !== 'nothing_selected' ? d[key] : undefined;
         }
         const inst = (d.oid_pv || '').match(/^alphaess-local\.\d+/);
         return inst ? `${inst[0]}.${DATA_POINTS[key]}` : undefined;
@@ -382,6 +433,35 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
         );
     }
 
+    renderWallbox(pos, power, t) {
+        const d = this.state.rxData;
+        const status = this.val('oid_wallbox_status');
+        const soc = num(this.val('oid_wallbox_soc'));
+        const parts = [];
+        if (power !== null && power >= ACTIVE_THRESHOLD) {
+            parts.push(t('charging'));
+        } else if (typeof status === 'boolean') {
+            parts.push(status ? t('wallbox_connected') : t('wallbox_disconnected'));
+        } else if (status !== undefined && status !== null && status !== '') {
+            parts.push(String(status));
+        } else {
+            parts.push(t('idle'));
+        }
+        if (soc !== null) {
+            parts.push(`${Math.round(soc)} %`);
+        }
+        return this.renderNode(
+            pos.x,
+            pos.y,
+            COLORS.wallbox,
+            ICONS.wallbox(COLORS.wallbox),
+            d.wallbox_label === undefined ? 'Wallbox' : d.wallbox_label,
+            formatPower(power),
+            parts.join(' · '),
+            COLORS.wallbox,
+        );
+    }
+
     renderChip(label, [value, unit], color) {
         return (
             <div className="aess-chip">
@@ -411,6 +491,16 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
         const alarm = num(this.val('oid_alarm')) || 0;
         const alarmText = this.val('oid_alarm_text') || '';
 
+        // Wallbox (optional, any adapter): node only shown when its power data point is set
+        const hasWallbox = !!this.oid('oid_wallbox');
+        const wbRaw = hasWallbox ? num(this.val('oid_wallbox')) : null;
+        const wallbox = wbRaw === null ? null : Math.abs(wbRaw) * (d.wallbox_unit === 'kW' ? 1000 : 1);
+        // the inverter measures the whole house incl. wallbox → show the house without it
+        const house =
+            hasWallbox && d.wallboxInLoad !== false && load !== null && wallbox !== null
+                ? Math.max(0, load - wallbox)
+                : load;
+
         const importing = grid !== null && grid > 0;
         const gridColor = importing ? COLORS.gridImport : COLORS.gridExport;
         const charging = bat !== null && bat < 0;
@@ -429,11 +519,13 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
 
         // Layout (viewBox 400 x 345): PV top, grid left, house right, battery bottom, hub in the middle
         const hub = { x: 200, y: 165 };
+        // with wallbox: house top right, wallbox bottom right
         const P = {
             pv: { x: 200, y: 48 },
             grid: { x: 62, y: 165 },
-            house: { x: 338, y: 165 },
+            house: hasWallbox ? { x: 338, y: 122 } : { x: 338, y: 165 },
             bat: { x: 200, y: 268 },
+            wallbox: { x: 338, y: 262 },
         };
 
         return (
@@ -476,12 +568,8 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                         gridColor,
                         importing,
                     )}
-                    {this.renderFlow(
-                        `M${hub.x + 14} ${hub.y} L${P.house.x - 34} ${P.house.y}`,
-                        load,
-                        COLORS.house,
-                        true,
-                    )}
+                    {this.renderFlow(link(hub, 14, P.house, 34), house, COLORS.house, true)}
+                    {hasWallbox ? this.renderFlow(link(hub, 14, P.wallbox, 34), wallbox, COLORS.wallbox, true) : null}
                     {this.renderFlow(
                         `M${P.bat.x} ${P.bat.y - 40} L${hub.x} ${hub.y + 14}`,
                         bat,
@@ -544,7 +632,7 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                             COLORS.house,
                             ICONS.house,
                             t('house'),
-                            formatPower(load),
+                            formatPower(house),
                             // only while the backup output is actually used
                             backup !== null && Math.abs(backup) >= ACTIVE_THRESHOLD
                                 ? `${t('backup')} ${formatPower(backup)}`
@@ -552,6 +640,8 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                             COLORS.backup,
                         ),
                     )}
+
+                    {hasWallbox ? this.renderButton('wallbox', this.renderWallbox(P.wallbox, wallbox, t)) : null}
 
                     {this.renderButton(
                         'battery',
@@ -586,7 +676,10 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                 </svg>
 
                 {showToday ? (
-                    <div className="aess-chips">
+                    <div
+                        className="aess-chips"
+                        style={this.oid('oid_wallbox_today') ? { gridTemplateColumns: 'repeat(6, 1fr)' } : undefined}
+                    >
                         {this.renderChip(t('today_pv'), formatEnergy(num(this.val('oid_pv_today'))), COLORS.pv)}
                         {this.renderChip(t('today_load'), formatEnergy(num(this.val('oid_load_today'))), COLORS.house)}
                         {this.renderChip(
@@ -599,6 +692,13 @@ export default class AlphaEssPowerFlow extends window.visRxWidget {
                             formatEnergy(num(this.val('oid_feed_today'))),
                             COLORS.gridExport,
                         )}
+                        {this.oid('oid_wallbox_today')
+                            ? this.renderChip(
+                                  t('today_wallbox'),
+                                  formatEnergy(num(this.val('oid_wallbox_today'))),
+                                  COLORS.wallbox,
+                              )
+                            : null}
                         {this.renderChip(
                             t('today_autarky'),
                             [
