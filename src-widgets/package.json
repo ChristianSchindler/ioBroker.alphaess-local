@@ -1,7 +1,7 @@
 {
     "name": "iobroker.alphaess-local-widgets",
     "private": true,
-    "version": "0.2.0",
+    "version": "0.3.0",
     "type": "module",
     "dependencies": {
         "@iobroker/types-vis-2": "~2.20.1",

@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "alphaess-local",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "news": {
+            "0.3.0": {
+                "en": "New: optional wallbox node in the VIS-2 power flow widget – works with any wallbox (charging power from any adapter, W or kW). It's subtracted from the house consumption;",
+                "de": "New: optional wallbox node in the VIS-2 power flow widget – works with any wallbox (charging power from any adapter, W or kW). It's subtracted from the house consumption;"
+            },
             "0.2.0": {
                 "en": " New: grid import today, live backup (EPS) power and inverter/battery warnings with their meaning in the power flow widget; theme \"auto\" follows the page; English default title. updated way for storing Settings, so Admin no longer shows port 502 as an open port (existing settings are moved automatically). VIS-2 now always loads the current widget after an update (no more Ctrl+F5 needed).",
                 "de": " New: grid import today, live backup (EPS) power and inverter/battery warnings with their meaning in the power flow widget; theme \"auto\" follows the page; English default title. updated way for storing Settings, so Admin no longer shows port 502 as an open port (existing settings are moved automatically). VIS-2 now always loads the current widget after an update (no more Ctrl+F5 needed)."
@@ -74,7 +78,7 @@
             "vis2AlphaEssWidgets": {
                 "i18n": "component",
                 "name": "vis2AlphaEssWidgets",
-                "url": "alphaess-local/customWidgets.js?v=0.2.0",
+                "url": "alphaess-local/customWidgets.js?v=0.3.0",
                 "bundlerType": "module",
                 "components": [
                     "AlphaEssPowerFlow"
